@@ -52,6 +52,18 @@
         <!-- ========== MAIN CONTENT ========== -->
         <main class="main-content">
 
+            <!-- Mobile Top App Bar -->
+            <header class="mobile-top-bar" id="mobileTopBar">
+                <div class="mobile-brand">
+                    <span class="mobile-brand-icon">⬡</span>
+                    <span class="mobile-brand-title">IMDb Scraper</span>
+                </div>
+                <div class="mobile-status-pill" id="mobileStatusBadge">
+                    <span class="pulse-dot"></span>
+                    <span id="mobileStatusText">IDLE</span>
+                </div>
+            </header>
+
             <!-- ============================================================ -->
             <!-- DASHBOARD VIEW -->
             <!-- ============================================================ -->
@@ -146,27 +158,91 @@
                     </div>
                 </section>
 
-                <!-- SEARCH AND FILTER -->
+                <!-- SEARCH, SORT & CATEGORIZE PANEL -->
                 <section class="glass-panel search-panel">
                     <div class="search-row">
-                        <div class="input-card">
+                        <div class="input-card search-input-card">
                             <label for="searchInput">🔍 Search Movies</label>
-                            <input id="searchInput" type="text" placeholder="Type a movie title..." autocomplete="off" />
+                            <input id="searchInput" type="text" placeholder="Search by movie title..." autocomplete="off" />
                         </div>
                         <div class="input-card">
                             <label for="ratingFilter">★ Min Rating</label>
                             <input id="ratingFilter" type="number" min="0" max="10" step="0.1" placeholder="e.g. 8.5" />
                         </div>
                     </div>
+
+                    <!-- Sort, Category & Per-Sort Controls -->
+                    <div class="sort-category-row">
+                        <div class="input-card">
+                            <label for="sortBySelect">⇅ Sort Movies</label>
+                            <select id="sortBySelect">
+                                <option value="rank-asc" selected>Rank: #1 → #250</option>
+                                <option value="rank-desc">Rank: #250 → #1</option>
+                                <option value="rating-desc">Rating: Highest First</option>
+                                <option value="rating-asc">Rating: Lowest First</option>
+                                <option value="year-desc">Year: Newest First</option>
+                                <option value="year-asc">Year: Oldest First</option>
+                                <option value="title-asc">Title: A → Z</option>
+                            </select>
+                        </div>
+                        <div class="input-card">
+                            <label for="categorySelect">🏷️ Category</label>
+                            <select id="categorySelect">
+                                <option value="all" selected>All Categories</option>
+                                <option value="masterpiece">👑 Masterpieces (★ 9.0+)</option>
+                                <option value="modern">🚀 Modern Era (2010+)</option>
+                                <option value="millennial">📼 90s & 2000s Classics</option>
+                                <option value="vintage">📽️ Vintage Era (Pre-1990)</option>
+                                <option value="epics">⏱️ Epics (> 2h 30m)</option>
+                            </select>
+                        </div>
+                        <div class="input-card">
+                            <label for="perPageSelect">📄 Per Sort / Page</label>
+                            <select id="perPageSelect">
+                                <option value="15" selected>15 Movies (Default)</option>
+                                <option value="25">25 Movies</option>
+                                <option value="50">50 Movies</option>
+                                <option value="250">All Movies</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Quick Category Filter Chips -->
+                    <div class="filter-chips-row">
+                        <span class="filter-chip-label">Quick Category:</span>
+                        <button type="button" class="filter-chip active" data-category="all">All</button>
+                        <button type="button" class="filter-chip" data-category="masterpiece">👑 9.0+ Masterpiece</button>
+                        <button type="button" class="filter-chip" data-category="modern">🚀 Modern (2010+)</button>
+                        <button type="button" class="filter-chip" data-category="millennial">📼 90s & 00s</button>
+                        <button type="button" class="filter-chip" data-category="vintage">📽️ Vintage</button>
+                        <button type="button" class="filter-chip" data-category="epics">⏱️ Epics</button>
+                    </div>
                 </section>
 
-                <!-- MOVIE TABLE -->
+                <!-- MOVIE RESULTS (ADAPTIVE CARDS & TABLE) -->
                 <section class="glass-panel table-panel" id="tablePanel">
                     <div class="table-header">
-                        <h3>Movie Results</h3>
-                        <span class="note" id="movieCount">0 movies loaded</span>
+                        <div class="table-header-left">
+                            <h3 class="table-title">Scraped Movies</h3>
+                            <span class="note" id="movieCount">0 movies loaded</span>
+                        </div>
+                        <div class="view-mode-toggle" id="viewModeToggle">
+                            <button type="button" class="view-toggle-btn active" id="viewCardsBtn" data-view-mode="cards" title="Switch to Card View">
+                                <span>📱</span> Cards
+                            </button>
+                            <button type="button" class="view-toggle-btn" id="viewTableBtn" data-view-mode="table" title="Switch to Table View">
+                                <span>📋</span> Table
+                            </button>
+                        </div>
                     </div>
-                    <div class="table-wrapper" id="tableWrapper">
+
+                    <!-- Modern Adaptive Card View (Optimized for Mobile Screens) -->
+                    <div class="movie-cards-container" id="movieCardsContainer">
+                        <div class="movie-cards-grid" id="movieCardsGrid"></div>
+                    </div>
+
+                    <!-- Classic Table View -->
+                    <div class="table-wrapper" id="tableWrapper" style="display: none;">
                         <div class="laser-scan" id="laserScan"></div>
                         <table>
                             <thead>
@@ -180,6 +256,19 @@
                             </thead>
                             <tbody id="movieTableBody"></tbody>
                         </table>
+                    </div>
+
+                    <!-- PAGINATION (Matching uploaded design: < Prev  1  2  3  4 ... 10  Next >) -->
+                    <div class="pagination-container" id="paginationContainer" style="display: none;">
+                        <button type="button" class="pagination-btn nav-btn" id="prevPageBtn" aria-label="Previous Page">
+                            <span>‹</span> Prev
+                        </button>
+                        <div class="pagination-pages" id="paginationPages">
+                            <!-- Dynamic page pills populated by JS -->
+                        </div>
+                        <button type="button" class="pagination-btn nav-btn" id="nextPageBtn" aria-label="Next Page">
+                            Next <span>›</span>
+                        </button>
                     </div>
                 </section>
 
@@ -333,6 +422,22 @@
             </div>
         </div>
     </div>
+
+    <!-- ========== MOBILE BOTTOM NAV DOCK ========== -->
+    <nav class="mobile-bottom-dock" id="mobileBottomDock" aria-label="Mobile Navigation">
+        <button type="button" class="dock-item active" data-view="dashboard-view">
+            <span class="dock-icon">◈</span>
+            <span class="dock-label">Dashboard</span>
+        </button>
+        <button type="button" class="dock-item" data-view="analytics-view">
+            <span class="dock-icon">📊</span>
+            <span class="dock-label">Analytics</span>
+        </button>
+        <button type="button" class="dock-item" data-view="export-view">
+            <span class="dock-icon">⬡</span>
+            <span class="dock-label">Export</span>
+        </button>
+    </nav>
 
     <script src="/static/js/app.js"></script>
 </body>
